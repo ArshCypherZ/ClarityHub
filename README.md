@@ -31,6 +31,13 @@ An intelligent learning platform that leverages AI to generate personalized stud
 - Get explanations and clarifications on demand with AI
 - Track generated videos history
 
+### 5. AI-Generated Flashcards
+
+- Create flashcard decks based on your study topics
+- AI generates questions and answers for effective memorization
+- Track your learning progress for each card
+- Review cards you haven't mastered yet
+
 ## 🚀 Tech Stack
 
 - **Frontend**: Next.js 15.1.4, React 19.0.0
@@ -76,6 +83,7 @@ DATA_API="your-ai-api-endpoint"
 ROADMAP_API="your-ai-api-endpoint"
 QUIZ_API="your-ai-api-endpoint"
 AITUTOR_API_BASE_URL="your-ai-tutor-api-base-url"
+FLASHCARD_API="your-ai-api-endpoint
 ```
 
 4. Run database migrations
@@ -89,6 +97,19 @@ pnpm dlx prisma db push
 
 ```bash
 pnpm dev
+```
+
+For production
+
+```bash
+pnpm build
+pnpm start
+```
+
+Troubleshooting with migration:
+
+```bash
+pnpm dlx prisma migrate resolve --applied 20250413195948_add_flashcards
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
@@ -117,6 +138,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
    - Navigate to the AI Tutor section
    - Generate a video based on your learning topic with customization like language and accent of the speaker.
    - Get past generated videos and their download links
+
+5. **Create and Use Flashcards**
+   - Navigate to the Flashcards section
+   - Generate a new deck based on your topic
+   - Review flashcards, marking them as learned
+   - Focus on cards needing more review
 
 ## 🤝 Contributing
 
