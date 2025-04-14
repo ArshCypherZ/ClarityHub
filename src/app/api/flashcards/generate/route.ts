@@ -9,6 +9,15 @@ interface Flashcard {
 }
 
 export async function POST(req: NextRequest) {
+  const FLASHCARD_API_URL = process.env.FLASHCARD_API;
+  if (!FLASHCARD_API_URL) {
+    console.error("Error: FLASHCARD_API environment variable is not set.");
+    return NextResponse.json(
+      { error: "Server configuration error." },
+      { status: 500 }
+    );
+  }
+
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -47,7 +56,7 @@ export async function POST(req: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
-      const response = await fetch("http://localhost:7070/generate_flashcards", {
+      const response = await fetch(FLASHCARD_API_URL, { // Use environment variable
         method: "POST",
         headers: {
           "Content-Type": "application/json",

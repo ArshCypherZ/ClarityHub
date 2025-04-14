@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering, prevent static analysis
+
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth();

@@ -9,6 +9,8 @@ import { Para } from "@/components/typography/para";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
+export const dynamic = 'force-dynamic'; // Ensures the page is always dynamically rendered
+
 interface FlashcardSet {
   id: string;
   topic: string;
