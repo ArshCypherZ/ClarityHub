@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { H1 } from "@/components/typography/h1";
 import { H2 } from "@/components/typography/h2";
 import { Para } from "@/components/typography/para";
+import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 interface Flashcard {
   id: string;
@@ -23,11 +25,7 @@ interface FlashcardSet {
   flashcards: Flashcard[];
 }
 
-export default function FlashcardViewClient({ 
-  params 
-}: { 
-  params: { id: string } 
-}) {
+export default function FlashcardViewClient({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [flashcardSet, setFlashcardSet] = useState<FlashcardSet | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,9 +38,7 @@ export default function FlashcardViewClient({
     const fetchFlashcardSet = async () => {
       try {
         const response = await fetch(`/api/flashcards/${params.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch flashcard set");
-        }
+        if (!response.ok) throw new Error("Failed to fetch flashcard set");
         const data = await response.json();
         setFlashcardSet(data);
       } catch (err) {
@@ -55,6 +51,43 @@ export default function FlashcardViewClient({
 
     fetchFlashcardSet();
   }, [params.id]);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return; // Don't handle keypresses when typing in form elements
+      }
+      
+      switch (e.key.toLowerCase()) {
+        case ' ':
+        case 'enter':
+          e.preventDefault();
+          toggleFlip();
+          break;
+        case 'arrowright':
+        case 'n':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'arrowleft':
+        case 'p':
+          e.preventDefault();
+          handlePrevious();
+          break;
+        case 'h':
+          e.preventDefault();
+          !isFlipped && toggleHint();
+          break;
+        case 'l':
+          e.preventDefault();
+          markAsLearned();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isFlipped]); // Only include isFlipped in dependencies to prevent unnecessary recreations
 
   const handleNext = () => {
     if (!flashcardSet) return;
@@ -76,11 +109,13 @@ export default function FlashcardViewClient({
 
   const toggleFlip = () => {
     setIsFlipped(!isFlipped);
+    if (showHint) setShowHint(false);
   };
 
-  const toggleHint = () => {
-    setShowHint(!showHint);
-  };
+  const toggleHint = (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      setShowHint(!showHint);
+    };
 
   const markAsLearned = async () => {
     if (!flashcardSet) return;
@@ -92,7 +127,6 @@ export default function FlashcardViewClient({
       });
 
       if (response.ok) {
-        // Update local state
         const updatedFlashcards = [...flashcardSet.flashcards];
         updatedFlashcards[currentCardIndex] = {
           ...currentCard,
@@ -113,8 +147,8 @@ export default function FlashcardViewClient({
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 h-6 w-6 animate-spin rounded-full border-t-2 border-b-2 border-gray-900"></div>
-          <Para>Loading flashcards...</Para>
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-500" />
+          <Para className="mt-4">Loading flashcards...</Para>
         </div>
       </div>
     );
@@ -133,7 +167,10 @@ export default function FlashcardViewClient({
   }
 
   const currentCard = flashcardSet.flashcards[currentCardIndex];
-  const progress = `${currentCardIndex + 1} / ${flashcardSet.flashcards.length}`;
+  const progress = ((currentCardIndex + 1) / flashcardSet.flashcards.length) * 100;
+  const learnedCount = flashcardSet.flashcards.filter(card => card.isLearned).length;
+  const totalCards = flashcardSet.flashcards.length;
+  const progressPercentage = Math.round((learnedCount / totalCards) * 100);
 
   return (
     <div className="p-10 pl-32">
@@ -153,70 +190,92 @@ export default function FlashcardViewClient({
         </Button>
       </div>
 
-      {/* Flashcard display */}
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <Para className="text-gray-600">{progress}</Para>
-          <div className="flex items-center">
-            <Button 
-              variant={currentCard.isLearned ? "default" : "outline"} 
-              onClick={markAsLearned}
-              className="mr-2"
-            >
-              {currentCard.isLearned ? "Learned" : "Mark as Learned"}
-            </Button>
-          </div>
+      {/* Progress bar and stats */}
+      <div className="mx-auto mb-8 max-w-2xl">
+        <div className="mb-2 flex items-center justify-between">
+          <Para className="text-gray-600">Card {currentCardIndex + 1} of {totalCards}</Para>
+          <Para className="text-gray-600">{progressPercentage}% Learned</Para>
         </div>
+        <Progress value={progress} className="h-2" />
+      </div>
 
-        {/* Flashcard */}
-        <div 
-          className={`mb-6 h-64 w-full cursor-pointer rounded-xl bg-white p-8 shadow-md transition-all duration-300 ${
-            isFlipped ? "rotate-y-180" : ""
-          }`}
-          onClick={toggleFlip}
-        >
-          <div className="flex h-full flex-col items-center justify-center">
-            {isFlipped ? (
-              <div className="text-center">
-                <H2 className="mb-4">Answer</H2>
-                <Para className="text-xl">{currentCard.answer}</Para>
-              </div>
-            ) : (
-              <div className="text-center">
-                <H2 className="mb-4">Question</H2>
-                <Para className="text-xl">{currentCard.question}</Para>
-                
-                {showHint && (
-                  <div className="mt-4 rounded-lg bg-gray-100 p-3">
-                    <Para className="text-sm italic">Hint: {currentCard.hint}</Para>
-                  </div>
-                )}
-              </div>
-            )}
+      {/* Flashcard */}
+      <div className="mx-auto max-w-2xl">
+        <div className={`flip-card mb-8 ${isFlipped ? 'flipped' : ''}`}>
+          <div className="flip-card-inner h-64">
+            <div className="flip-card-front flex h-full flex-col items-center justify-center rounded-xl bg-white p-8 shadow-lg">
+              <H2 className="mb-4">Question</H2>
+              <Para className="text-xl">{currentCard.question}</Para>
+              {showHint && (
+                <div className="mt-4 rounded-lg bg-gray-50 p-3">
+                  <Para className="text-sm italic">Hint: {currentCard.hint}</Para>
+                </div>
+              )}
+            </div>
+            <div className="flip-card-back flex h-full flex-col items-center justify-center rounded-xl bg-white p-8 shadow-lg">
+              <H2 className="mb-4">Answer</H2>
+              <Para className="text-xl">{currentCard.answer}</Para>
+            </div>
           </div>
         </div>
 
         {/* Controls */}
-        <div className="mt-8 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <Button variant="outline" onClick={handlePrevious}>
             Previous
           </Button>
           
-          {!isFlipped && (
+          <div className="flex gap-2">
+            {!isFlipped && (
+              <Button
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleHint();
+                }}
+              >
+                {showHint ? "Hide Hint" : "Show Hint"}
+              </Button>
+            )}
+            <Button
+              variant={currentCard.isLearned ? "default" : "outline"}
+              onClick={(e) => {
+                e.stopPropagation();
+                markAsLearned();
+              }}
+            >
+              {currentCard.isLearned ? "Learned" : "Mark as Learned"}
+            </Button>
             <Button
               variant="outline"
               onClick={(e) => {
                 e.stopPropagation();
-                toggleHint();
+                toggleFlip();
               }}
             >
-              {showHint ? "Hide Hint" : "Show Hint"}
+              {isFlipped ? "Show Question" : "Show Answer"}
             </Button>
-          )}
+          </div>
           
           <Button variant="outline" onClick={handleNext}>
             Next
           </Button>
+        </div>
+      </div>
+
+      {/* Add keyboard shortcuts help */}
+      <div className="mx-auto mt-8 max-w-2xl rounded-lg bg-gray-50 p-4">
+        <H2 className="mb-2">Keyboard Shortcuts</H2>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Para><kbd className="px-2 py-1 bg-white rounded border">Space</kbd> or <kbd className="px-2 py-1 bg-white rounded border">Enter</kbd> Flip card</Para>
+            <Para><kbd className="px-2 py-1 bg-white rounded border">→</kbd> or <kbd className="px-2 py-1 bg-white rounded border">N</kbd> Next card</Para>
+            <Para><kbd className="px-2 py-1 bg-white rounded border">←</kbd> or <kbd className="px-2 py-1 bg-white rounded border">P</kbd> Previous card</Para>
+          </div>
+          <div>
+            <Para><kbd className="px-2 py-1 bg-white rounded border">H</kbd> Toggle hint</Para>
+            <Para><kbd className="px-2 py-1 bg-white rounded border">L</kbd> Toggle learned status</Para>
+          </div>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { BookOpen, Loader2 } from "lucide-react";
 import { H2 } from "@/components/typography/h2";
 import { Para } from "@/components/typography/para";
 import { Button } from "@/components/ui/button";
@@ -62,9 +62,12 @@ export default function FlashcardsPage() {
   return (
     <div className="p-10 pl-32">
       <div>
-        <H2>Generate Flashcards</H2>
+        <H2 className="flex items-center gap-2">
+          <BookOpen className="h-6 w-6" />
+          Generate Flashcards
+        </H2>
         <Para>
-          Create AI-generated flashcards to help you study and memorize key concepts.
+          Create AI-generated flashcards to help you study and memorize key concepts
         </Para>
       </div>
 
@@ -124,10 +127,21 @@ export default function FlashcardsPage() {
           disabled={loading}
           className="w-fit rounded-none text-lg"
         >
-          {loading ? "GENERATING..." : "GENERATE FLASHCARDS"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              GENERATING...
+            </>
+          ) : (
+            "GENERATE FLASHCARDS"
+          )}
         </Button>
 
-        {error && <p className="text-red-500">{error}</p>}
+        {error && (
+          <div className="rounded-lg bg-red-50 p-4 text-red-700">
+            {error}
+          </div>
+        )}
       </form>
     </div>
   );
