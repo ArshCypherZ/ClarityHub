@@ -39,6 +39,7 @@ try:
         host=os.getenv("REDIS_HOST", "localhost"),
         port=int(os.getenv("REDIS_PORT", 6379)),
         db=int(os.getenv("REDIS_DB", 0)),
+        password=os.getenv("REDIS_PASSWORD", "qaz000"),  # Use the password if needed
         decode_responses=True # Decode responses to strings
     )
     redis_client.ping() # Check connection
@@ -55,8 +56,8 @@ except Exception as e:
 
 celery_app = Celery(
     'edu_video_generator_tasks',
-    broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/1"), # Use DB 1 for broker
-    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/2") # Use DB 2 for results
+    broker=os.getenv("CELERY_BROKER_URL", "redis://:qaz000@localhost:6379/1"), # Use DB 1 for broker
+    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://qaz000@localhost:6379/2") # Use DB 2 for results
 )
 
 # Optional Celery configuration
