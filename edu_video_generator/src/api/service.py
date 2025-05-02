@@ -54,10 +54,11 @@ except Exception as e:
 # dotenv_path = os.path.join(PROJECT_BASE_DIR, 'config', '.env')
 # load_dotenv(dotenv_path=dotenv_path)
 
+
 celery_app = Celery(
     'edu_video_generator_tasks',
-    broker=os.getenv("CELERY_BROKER_URL", "redis://:qaz000@localhost:6379/1"), # Use DB 1 for broker
-    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://qaz000@localhost:6379/2") # Use DB 2 for results
+    broker='redis://localhost:6379/1',  # Try without password first
+    backend='redis://localhost:6379/2',
 )
 
 # Optional Celery configuration
