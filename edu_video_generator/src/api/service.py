@@ -57,8 +57,8 @@ except Exception as e:
 
 celery_app = Celery(
     'edu_video_generator_tasks',
-    broker='redis://localhost:6379/1',  # Try without password first
-    backend='redis://localhost:6379/2',
+    broker='redis://:qaz000@localhost:6379/1', 
+    backend='redis://:qaz000@localhost:6379/2',
 )
 
 # Optional Celery configuration
