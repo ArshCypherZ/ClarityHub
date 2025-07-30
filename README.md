@@ -85,5 +85,3 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 ---
 
 Built with ❤️
-
-#AMUHACKS_4.0 #CSSAMU #AMU #AMUHACKS 4.0
